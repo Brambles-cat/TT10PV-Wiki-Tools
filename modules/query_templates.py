@@ -8,8 +8,9 @@ _create_page = """mutation {{
             isPrivate: false
             locale: "en"
             path: "{2}"
+            scriptCss: "{3}"
             tags: []
-            title: "{3}"
+            title: "{4}"
         ) {{
             page {{
                 id
@@ -18,5 +19,5 @@ _create_page = """mutation {{
     }}
 }}"""
 
-def create_page(content: str, description: str, path: str, title: str):
-    return _create_page.format(content, description, path, title)
+def create_page(content: str, description: str, css: str, path: str, title: str):
+    return _create_page.format(content, description, path, css, title)
