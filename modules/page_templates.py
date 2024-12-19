@@ -1,18 +1,22 @@
-from bs4 import BeautifulSoup, PageElement, Tag
+from bs4 import BeautifulSoup, Tag
 from modules.external import fetch_video, VideoData, ArchiveIndices as I
-from modules.dtypes import ElementChanges
+from modules.dtypes import ElementChanges, PageData
+from modules.query_templates import get_page
 from typing import Callable
+import requests
 
-T10VIDEO = "templates/t10video.html"
-T10CREATOR = "templates/t10creator.html"
 
 class TemplateBuilder:
     """Class for dynamically populating template html pages for the wiki"""
 
     _archive_row = None
     _video_cache: VideoData = None
+    _page_cache = None
 
-    def __init__(self):
+    def __init__(self, wiki_api_key: str, wiki_domain: str):
+        self._wiki_api_key = wiki_api_key
+        self._wiki_domain = wiki_domain
+
         # when making templates, element ids should only be from the same group as the page that's being created
         # e.g. don't use t10v_url with t10c_name in the same template
         self._populators: dict[str, Callable[[], ElementChanges]] = {
@@ -38,13 +42,13 @@ class TemplateBuilder:
             "t10c_name": lambda: {}
         }
 
-    def build_top10v_page(self, archive_row: list[str]):
+    def build_top10v_page(self, archive_row: list[str], template_path: str):
         """Populates the top 10er template with information about the video entry in the archive"""
 
         self._archive_row = archive_row
         self._video_cache = fetch_video(archive_row[I.LINK])
 
-        with open(T10VIDEO, "r") as html_file:
+        with open(template_path, "r") as html_file:
             soup = BeautifulSoup("".join(html_file.readlines()), "html.parser")
             css = self._populate(soup)
 
@@ -56,7 +60,18 @@ class TemplateBuilder:
 
     # Helper methods
     def _keep(self, element_id):
-        pass
+        if not self._page_cache:
+            response = requests.post(
+                f"http://{self._domain}/graphql",
+                headers={
+                    "Authorization": f"Bearer {self._wiki_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={"query": get_page(element_id)}
+            )
+        # todo
+        return None
+
 
     def _populate(self, element: Tag | str):
         if isinstance(element, str): return

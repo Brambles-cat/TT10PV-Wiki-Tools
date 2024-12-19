@@ -12,3 +12,11 @@ class CreatorData:
 class ElementChanges(TypedDict):
     attributes: dict[str, str] | None
     content: PageElement
+
+class PageIdentifier(TypedDict):
+    id: int
+    path: str
+
+class PageData(TypedDict):
+    content: str
+    css: str
